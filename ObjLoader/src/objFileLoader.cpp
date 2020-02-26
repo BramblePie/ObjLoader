@@ -6,7 +6,6 @@
 #include <vector>
 #include <queue>
 
-//#include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 

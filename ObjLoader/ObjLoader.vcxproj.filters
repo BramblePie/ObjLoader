@@ -28,7 +28,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Object Include="src\box.obj" />
+    <Object Include="src\pbox.obj" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="src\text.txt" />

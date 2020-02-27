@@ -149,7 +149,7 @@
     <ClInclude Include="src\objFileLoader.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <Object Include="src\box.obj">
+    <Object Include="src\pbox.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>

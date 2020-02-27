@@ -9,20 +9,11 @@
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 
-struct Position
-{
-	float x, y, z;
-};
+struct Position { float x, y, z; };
 
-struct Normal
-{
-	float x, y, z;
-};
+struct Normal { float x, y, z; };
 
-struct UV
-{
-	float x, y;
-};
+struct UV { float x, y; };
 
 struct Vertex
 {
@@ -59,6 +50,7 @@ float* loadObject(const char* path, unsigned int& count, unsigned int& position_
 	if (file.is_open())
 	{
 		const unsigned int n = 128;
+		unsigned int count_pos = 0, count_norm = 0, count_uv = 0;
 		while (!file.eof())
 		{
 			std::string line;
@@ -72,24 +64,36 @@ float* loadObject(const char* path, unsigned int& count, unsigned int& position_
 			}
 			else if (0 == strcmp(head, "v"))
 			{		// Vertex position found
+				count_pos++;
 				Position tmp;
 				if (4 == sscanf_s(line.c_str(), "%s%f %f %f", head, n, &tmp.x, &tmp.y, &tmp.z))
 					pos.push_back(tmp);
 			}
 			else if (0 == strcmp(head, "vn"))
 			{		// Vertex normal found
+				count_norm++;
 				Normal tmp;
 				if (4 == sscanf_s(line.c_str(), "%s%f %f %f", head, n, &tmp.x, &tmp.y, &tmp.z))
 					normals.push_back(tmp);
 			}
 			else if (0 == strcmp(head, "vt"))
 			{		// Vertex uv found
+				count_uv++;
 				UV tmp;
 				if (3 == sscanf_s(line.c_str(), "%s%f %f", head, n, &tmp.x, &tmp.y))
 					uvs.push_back(tmp);
 			}
 			else if (0 == strcmp(head, "f"))
 			{		// Face found
+				// Check stride for position, normal and uv
+				if (!(g_position_size | g_normal_size | g_uv_size))
+				{
+					if (count_pos != pos.size() || count_norm != normals.size() || count_uv != uvs.size())
+						break;
+					g_position_size = sizeof(pos[0]);
+					g_normal_size = normals.size() > 0 ? sizeof(normals[0]) : 0;
+					g_uv_size = uvs.size() > 0 ? sizeof(uvs[0]) : 0;
+				}
 				parse_face(line);
 			}
 		}
@@ -105,7 +109,9 @@ float* loadObject(const char* path, unsigned int& count, unsigned int& position_
 	uv_size = g_uv_size;
 	count = vertices.size();
 
-	return make_out_array(count);
+	if (count)
+		return make_out_array(count);
+	return nullptr;
 }
 
 float* make_out_array(unsigned int count)
@@ -152,23 +158,25 @@ float* make_out_array(unsigned int count)
 	return out;
 }
 
+bool CheckOutOfBounds(unsigned int count, std::initializer_list<unsigned int> indices);
+
 void parse_face(std::string line)
 {
-	// Check stride for position, normal and uv
-	if (!(g_position_size | g_normal_size | g_uv_size))
-	{
-		g_position_size = sizeof(pos[0]);
-		g_normal_size = normals.size() > 0 ? sizeof(normals[0]) : 0;
-		g_uv_size = uvs.size() > 0 ? sizeof(uvs[0]) : 0;
-	}
-
 	unsigned int pos_i[3]{}, uv_i[3]{}, norm_i[3]{};
 	if (g_position_size > 0 && g_normal_size > 0 && g_uv_size > 0)
 	{
-		sscanf_s(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d",
-				 &pos_i[0], &uv_i[0], &norm_i[0],
-				 &pos_i[1], &uv_i[1], &norm_i[1],
-				 &pos_i[2], &uv_i[2], &norm_i[2]);
+		if (9 != sscanf_s(line.c_str(), "f %u/%u/%u %u/%u/%u %u/%u/%u",
+						  &pos_i[0], &uv_i[0], &norm_i[0],
+						  &pos_i[1], &uv_i[1], &norm_i[1],
+						  &pos_i[2], &uv_i[2], &norm_i[2]))
+			return;
+		if (CheckOutOfBounds(pos.size(), { pos_i[0], pos_i[1], pos_i[2] }))
+			return;
+		if (CheckOutOfBounds(uvs.size(), { uv_i[0], uv_i[1], uv_i[2] }))
+			return;
+		if (CheckOutOfBounds(normals.size(), { norm_i[0], norm_i[1], norm_i[2] }))
+			return;
+
 		Vertex face[3]{};
 		face[0].position = &pos[pos_i[0] - 1];
 		face[1].position = &pos[pos_i[1] - 1];
@@ -188,10 +196,16 @@ void parse_face(std::string line)
 	}
 	else if (g_position_size > 0 && g_uv_size > 0)
 	{
-		sscanf_s(line.c_str(), "f %d/%d %d/%d %d/%d",
-				 &pos_i[0], &uv_i[0],
-				 &pos_i[1], &uv_i[1],
-				 &pos_i[2], &uv_i[2]);
+		if (6 != sscanf_s(line.c_str(), "f %u/%u %u/%u %u/%u",
+						  &pos_i[0], &uv_i[0],
+						  &pos_i[1], &uv_i[1],
+						  &pos_i[2], &uv_i[2]))
+			return;
+		if (CheckOutOfBounds(pos.size(), { pos_i[0], pos_i[1], pos_i[2] }))
+			return;
+		if (CheckOutOfBounds(uvs.size(), { uv_i[0], uv_i[1], uv_i[2] }))
+			return;
+
 		Vertex face[3]{};
 		face[0].position = &pos[pos_i[0] - 1];
 		face[1].position = &pos[pos_i[1] - 1];
@@ -212,7 +226,11 @@ void parse_face(std::string line)
 	}
 	else if (g_position_size > 0)
 	{
-		sscanf_s(line.c_str(), "f %d %d %d", &pos_i[0], &pos_i[1], &pos_i[2]);
+		if (3 != sscanf_s(line.c_str(), "f %u %u %u", &pos_i[0], &pos_i[1], &pos_i[2]))
+			return;
+		if (CheckOutOfBounds(pos.size(), { pos_i[0], pos_i[1], pos_i[2] }))
+			return;
+
 		Vertex face[3]{};
 		face[0].position = &pos[pos_i[0] - 1];
 		face[1].position = &pos[pos_i[1] - 1];
@@ -227,6 +245,14 @@ void parse_face(std::string line)
 		vertices.push(face[1]);
 		vertices.push(face[2]);
 	}
+}
+
+bool CheckOutOfBounds(unsigned int count, std::initializer_list<unsigned int> indices)
+{
+	bool b = false;
+	for (auto&& i : indices)
+		b |= i > count;
+	return b;
 }
 
 Normal* generate_normals(Vertex face[3])

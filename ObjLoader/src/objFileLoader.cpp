@@ -29,80 +29,25 @@ std::vector<Position> pos;
 std::vector<Normal> normals;
 std::vector<UV> uvs;
 
-void parse_face(std::string line);
+bool parse_file(const char* path);
 
-float* make_out_array(unsigned int count);
+float* make_array(unsigned int count);
 
-Normal* generate_normals(Vertex face[3]);
+float* make_indexed_buffer(unsigned int count);
 
-float* loadObject(const char* path, unsigned int& count, unsigned int& position_size, unsigned int& normal_size, unsigned int& uv_size)
+float* loadObject(const char* path,
+				  unsigned int& count,
+				  unsigned int& position_size,
+				  unsigned int& normal_size,
+				  unsigned int& uv_size)
 {
 	// count			=		number of vertices
 	// position_size	=		byte size of a position
 	// normal_size		=		byte size of a normal
 	// uv_size			=		byte size of a UV
 
-	// Resulting vertices
-	float* out_vertices = nullptr;
-
-	std::ifstream file;
-	file.open(path);
-	if (file.is_open())
-	{
-		const unsigned int n = 128;
-		unsigned int count_pos = 0, count_norm = 0, count_uv = 0;
-		while (!file.eof())
-		{
-			std::string line;
-			std::getline(file, line);
-
-			char head[n]{};
-			int res = sscanf_s(line.c_str(), "%s", head, n);
-			if (0 == strcmp(head, "#") || res == 0)
-			{
-				// Comment or blank line, go next
-			}
-			else if (0 == strcmp(head, "v"))
-			{		// Vertex position found
-				count_pos++;
-				Position tmp;
-				if (4 == sscanf_s(line.c_str(), "%s%f %f %f", head, n, &tmp.x, &tmp.y, &tmp.z))
-					pos.push_back(tmp);
-			}
-			else if (0 == strcmp(head, "vn"))
-			{		// Vertex normal found
-				count_norm++;
-				Normal tmp;
-				if (4 == sscanf_s(line.c_str(), "%s%f %f %f", head, n, &tmp.x, &tmp.y, &tmp.z))
-					normals.push_back(tmp);
-			}
-			else if (0 == strcmp(head, "vt"))
-			{		// Vertex uv found
-				count_uv++;
-				UV tmp;
-				if (3 == sscanf_s(line.c_str(), "%s%f %f", head, n, &tmp.x, &tmp.y))
-					uvs.push_back(tmp);
-			}
-			else if (0 == strcmp(head, "f"))
-			{		// Face found
-				// Check stride for position, normal and uv
-				if (!(g_position_size | g_normal_size | g_uv_size))
-				{
-					if (count_pos != pos.size() || count_norm != normals.size() || count_uv != uvs.size())
-						break;
-					g_position_size = sizeof(pos[0]);
-					g_normal_size = normals.size() > 0 ? sizeof(normals[0]) : 0;
-					g_uv_size = uvs.size() > 0 ? sizeof(uvs[0]) : 0;
-				}
-				parse_face(line);
-			}
-		}
-	}
-	else
-	{
-		std::cout << "ERROR :: File \"" << path << "\" NOT FOUND or NO ACCESS" << std::endl;
+	if (!parse_file(path))
 		return nullptr;
-	}
 
 	position_size = g_position_size;
 	normal_size = g_position_size;
@@ -110,11 +55,37 @@ float* loadObject(const char* path, unsigned int& count, unsigned int& position_
 	count = vertices.size();
 
 	if (count)
-		return make_out_array(count);
+		return make_array(count);
 	return nullptr;
 }
 
-float* make_out_array(unsigned int count)
+float* loadObjectByIndex(const char* path,
+						 unsigned int& vertex_count,
+						 unsigned int& position_size,
+						 unsigned int& normal_size,
+						 unsigned int& uv_size,
+						 unsigned int* indices,
+						 unsigned int& index_count)
+{
+	// count			=		number of vertices
+	// position_size	=		byte size of a position
+	// normal_size		=		byte size of a normal
+	// uv_size			=		byte size of a UV
+
+	if (!parse_file(path))
+		return nullptr;
+
+	position_size = g_position_size;
+	normal_size = g_position_size;
+	uv_size = g_uv_size;
+	vertex_count = vertices.size();
+
+	if (vertex_count)
+		return make_indexed_buffer(vertex_count);
+	return nullptr;
+}
+
+float* make_array(unsigned int count)
 {
 	// Stride in floats
 	// Normals are generated if not present
@@ -158,7 +129,33 @@ float* make_out_array(unsigned int count)
 	return out;
 }
 
-bool CheckOutOfBounds(unsigned int count, std::initializer_list<unsigned int> indices);
+float* make_indexed_buffer(unsigned int count)
+{
+	return nullptr;
+}
+
+bool CheckOutOfBounds(unsigned int count, std::initializer_list<unsigned int> indices)
+{
+	bool b = false;
+	for (auto&& i : indices)
+		b |= i > count;
+	return b;
+}
+
+Normal* generate_normals(Vertex face[3])
+{
+	glm::vec3 a = glm::vec3(face[0].position->x, face[0].position->y, face[0].position->z);
+	// b and c relative to a
+	glm::vec3 b = glm::vec3(face[1].position->x, face[1].position->y, face[1].position->z) - a;
+	glm::vec3 c = glm::vec3(face[2].position->x, face[2].position->y, face[2].position->z) - a;
+
+	glm::vec3 n = glm::normalize(glm::cross(b, c));
+	Normal* res = new Normal();
+	res->x = n.x;
+	res->y = n.y;
+	res->z = n.z;
+	return res;
+}
 
 void parse_face(std::string line)
 {
@@ -247,25 +244,65 @@ void parse_face(std::string line)
 	}
 }
 
-bool CheckOutOfBounds(unsigned int count, std::initializer_list<unsigned int> indices)
+bool parse_file(const char* path)
 {
-	bool b = false;
-	for (auto&& i : indices)
-		b |= i > count;
-	return b;
-}
+	std::ifstream file;
+	file.open(path);
+	if (file.is_open())
+	{
+		const unsigned int n = 128;
+		unsigned int count_pos = 0, count_norm = 0, count_uv = 0;
+		while (!file.eof())
+		{
+			std::string line;
+			std::getline(file, line);
 
-Normal* generate_normals(Vertex face[3])
-{
-	glm::vec3 a = glm::vec3(face[0].position->x, face[0].position->y, face[0].position->z);
-	// b and c relative to a
-	glm::vec3 b = glm::vec3(face[1].position->x, face[1].position->y, face[1].position->z) - a;
-	glm::vec3 c = glm::vec3(face[2].position->x, face[2].position->y, face[2].position->z) - a;
-
-	glm::vec3 n = glm::normalize(glm::cross(b, c));
-	Normal* res = new Normal();
-	res->x = n.x;
-	res->y = n.y;
-	res->z = n.z;
-	return res;
+			char head[n]{};
+			int res = sscanf_s(line.c_str(), "%s", head, n);
+			if (0 == strcmp(head, "#") || res == 0)
+			{
+				// Comment or blank line, go next
+			}
+			else if (0 == strcmp(head, "v"))
+			{		// Vertex position found
+				count_pos++;
+				Position tmp;
+				if (4 == sscanf_s(line.c_str(), "%s%f %f %f", head, n, &tmp.x, &tmp.y, &tmp.z))
+					pos.push_back(tmp);
+			}
+			else if (0 == strcmp(head, "vn"))
+			{		// Vertex normal found
+				count_norm++;
+				Normal tmp;
+				if (4 == sscanf_s(line.c_str(), "%s%f %f %f", head, n, &tmp.x, &tmp.y, &tmp.z))
+					normals.push_back(tmp);
+			}
+			else if (0 == strcmp(head, "vt"))
+			{		// Vertex uv found
+				count_uv++;
+				UV tmp;
+				if (3 == sscanf_s(line.c_str(), "%s%f %f", head, n, &tmp.x, &tmp.y))
+					uvs.push_back(tmp);
+			}
+			else if (0 == strcmp(head, "f"))
+			{		// Face found
+				// Check stride for position, normal and uv
+				if (!(g_position_size | g_normal_size | g_uv_size))
+				{
+					if (count_pos != pos.size() || count_norm != normals.size() || count_uv != uvs.size())
+						break;
+					g_position_size = sizeof(pos[0]);
+					g_normal_size = normals.size() > 0 ? sizeof(normals[0]) : 0;
+					g_uv_size = uvs.size() > 0 ? sizeof(uvs[0]) : 0;
+				}
+				parse_face(line);
+			}
+		}
+	}
+	else
+	{
+		std::cout << "ERROR :: File \"" << path << "\" NOT FOUND or NO ACCESS" << std::endl;
+		return false;
+	}
+	return true;
 }

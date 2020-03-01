@@ -143,9 +143,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\objectLoader.cpp" />
     <ClCompile Include="src\objFileLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\objectLoader.h" />
     <ClInclude Include="src\objFileLoader.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -153,9 +155,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>
+    <Object Include="src\uvbox.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
   </ItemGroup>
   <ItemGroup>
     <Text Include="src\text.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\198.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

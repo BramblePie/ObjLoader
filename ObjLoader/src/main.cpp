@@ -2,7 +2,9 @@
 
 #include "objFileLoader.hpp"
 
-int main()
+#include "objectLoader.h"
+
+void testObjFileLoader()
 {
 	unsigned int count, position_size, normal_size, uv_size;
 	float* buffer = loadObject(R"(src\pbox.obj)", count, position_size, normal_size, uv_size);
@@ -16,6 +18,28 @@ int main()
 		if (uv_size)
 			std::cout << "    " << buffer[s * i + p + n] << ", " << buffer[s * i + p + n + 1] << std::endl;
 	}
+}
+
+int main()
+{
+	unsigned int* ib;
+	unsigned int bufferSize, indexCount, posCount, uvCount;
+	float* vb = objectLoader(R"(src\uvbox.obj)", bufferSize, ib, indexCount, posCount, uvCount);
+
+	std::cout << "Position count: " << posCount << ", UV count: " << uvCount << std::endl;
+	std::cout << "Buffer size(bytes): " << bufferSize << ", index count: " << indexCount << std::endl << std::endl;
+
+	unsigned int step = posCount + uvCount;
+	unsigned int n = bufferSize / (step * sizeof(float));
+	for (unsigned int i = 0; i < n; i++)
+	{
+		for (unsigned int j = 0; j < step; j++)
+			std::cout << vb[step * i + j] << ",\t";
+		std::cout << std::endl;
+	}
+
+	for (unsigned int i = 0; i < indexCount; i++)
+		std::cout << ib[i] << std::endl;
 
 	return 0;
 }

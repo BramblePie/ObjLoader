@@ -21,16 +21,28 @@
     <ClCompile Include="src\objFileLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\objectLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\objFileLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\objectLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Object Include="src\pbox.obj" />
+    <Object Include="src\uvbox.obj" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="src\text.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\198.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

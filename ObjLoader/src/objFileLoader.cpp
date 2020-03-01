@@ -29,6 +29,8 @@ std::vector<Position> pos;
 std::vector<Normal> normals;
 std::vector<UV> uvs;
 
+std::vector<unsigned int> _indices;
+
 bool parse_file(const char* path);
 
 float* make_array(unsigned int count);
@@ -126,6 +128,11 @@ float* make_array(unsigned int count)
 			out[i + 5] = v.normal->z;
 		}
 	}
+
+	pos.clear();
+	normals.clear();
+	uvs.clear();
+
 	return out;
 }
 

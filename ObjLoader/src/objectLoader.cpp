@@ -55,10 +55,8 @@ float* objectLoader(const char* path, unsigned int& bufferSize,
 
 	parseFile(path, positions, uvs, elements);
 
-	if (positions.size() > 0)
-		positionCount = 3;
-	if (uvs.size() > 0)
-		uvCount = 2;
+	positionCount = positions.size() > 0 ? 3 : 0;
+	uvCount = uvs.size() > 0 ? 2 : 0;
 
 	indexCount = elements.size();
 	if (indexCount <= 0)
@@ -72,7 +70,7 @@ float* objectLoader(const char* path, unsigned int& bufferSize,
 	{
 		Vertex v;
 		v.position = &positions[(*e).v];
-		v.uv = &uvs[(*e).vt];
+		v.uv = uvCount ? &uvs[(*e).vt] : nullptr;
 
 		auto it = std::find(vertices.begin(), vertices.end(), v);
 		if (it != vertices.end())

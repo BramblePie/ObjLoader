@@ -24,7 +24,7 @@ int main()
 {
 	unsigned int* ib;
 	unsigned int bufferSize, indexCount, posCount, uvCount;
-	float* vb = objectLoader(R"(src\uvbox.obj)", bufferSize, ib, indexCount, posCount, uvCount);
+	float* vb = objectLoader(R"(src\pbox.obj)", bufferSize, ib, indexCount, posCount, uvCount);
 
 	std::cout << "Position count: " << posCount << ", UV count: " << uvCount << std::endl;
 	std::cout << "Buffer size(bytes): " << bufferSize << ", index count: " << indexCount << std::endl << std::endl;
@@ -39,7 +39,11 @@ int main()
 	}
 
 	for (unsigned int i = 0; i < indexCount; i++)
-		std::cout << ib[i] << std::endl;
+	{
+		std::cout << ib[i] << ", ";
+		if ((i + 1) % 3 == 0)
+			std::cout << std::endl;
+	}
 
 	return 0;
 }

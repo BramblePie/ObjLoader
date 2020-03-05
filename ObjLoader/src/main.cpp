@@ -5,13 +5,17 @@
 int main()
 {
 	unsigned int* ib;
-	unsigned int bufferSize, indexCount, posCount, uvCount;
-	float* vb = loadObject(R"(src\pbox.obj)", bufferSize, ib, indexCount, posCount, uvCount);
+	unsigned int bufferSize, indexCount, posCount, normCount, uvCount;
+	float* vb = loadObject(R"(src\uvbox.obj)", bufferSize, ib, indexCount, posCount, normCount, uvCount);
 
-	std::cout << "Position count: " << posCount << ", UV count: " << uvCount << std::endl;
-	std::cout << "Buffer size(bytes): " << bufferSize << ", index count: " << indexCount << std::endl << std::endl;
+	std::cout << "Position count: " << posCount <<
+		", normal count: " << normCount <<
+		", UV count: " << uvCount << std::endl;
 
-	unsigned int step = posCount + uvCount;
+	std::cout << "Buffer size(bytes): " << bufferSize <<
+		", index count: " << indexCount << std::endl << std::endl;
+
+	unsigned int step = posCount + normCount + uvCount;
 	unsigned int n = bufferSize / (step * sizeof(float));
 	for (unsigned int i = 0; i < n; i++)
 	{

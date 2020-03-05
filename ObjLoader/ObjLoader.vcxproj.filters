@@ -26,10 +26,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\objFileLoader.hpp">
+    <ClInclude Include="src\objectLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\objectLoader.h">
+    <ClInclude Include="src\objFileLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

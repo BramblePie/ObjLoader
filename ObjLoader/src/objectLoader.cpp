@@ -106,7 +106,7 @@ float* objectLoader(const char* path, unsigned int& bufferSize,
 	return buffer;
 }
 
-bool CheckOutOfBounds(int count, std::initializer_list<int> indices)
+bool BoundsCheck(int count, std::initializer_list<int> indices)
 {
 	bool b = false;
 	for (auto&& i : indices)
@@ -162,9 +162,9 @@ void parseFile(const char* path, std::vector<Position>& positions, std::vector<U
 									  &pos_i[1], &uv_i[1], &norm_i[1],
 									  &pos_i[2], &uv_i[2], &norm_i[2]))
 						continue;
-					if (CheckOutOfBounds(positions.size(), { pos_i[0], pos_i[1], pos_i[2] }))
+					if (BoundsCheck(positions.size(), { pos_i[0], pos_i[1], pos_i[2] }))
 						continue;
-					if (CheckOutOfBounds(uvs.size(), { uv_i[0], uv_i[1], uv_i[2] }))
+					if (BoundsCheck(uvs.size(), { uv_i[0], uv_i[1], uv_i[2] }))
 						continue;
 
 					elements.push_back({ pos_i[0] - 1, uv_i[0] - 1 });
@@ -179,9 +179,9 @@ void parseFile(const char* path, std::vector<Position>& positions, std::vector<U
 									  &pos_i[1], &uv_i[1],
 									  &pos_i[2], &uv_i[2]))
 						continue;
-					if (CheckOutOfBounds(positions.size(), { pos_i[0], pos_i[1], pos_i[2] }))
+					if (BoundsCheck(positions.size(), { pos_i[0], pos_i[1], pos_i[2] }))
 						continue;
-					if (CheckOutOfBounds(uvs.size(), { uv_i[0], uv_i[1], uv_i[2] }))
+					if (BoundsCheck(uvs.size(), { uv_i[0], uv_i[1], uv_i[2] }))
 						continue;
 
 					elements.push_back({ pos_i[0] - 1, uv_i[0] - 1 });
@@ -193,7 +193,7 @@ void parseFile(const char* path, std::vector<Position>& positions, std::vector<U
 					int pos_i[3]{};
 					if (3 != sscanf_s(cline, "f %u %u %u", &pos_i[0], &pos_i[1], &pos_i[2]))
 						continue;
-					if (CheckOutOfBounds(positions.size(), { pos_i[0], pos_i[1], pos_i[2] }))
+					if (BoundsCheck(positions.size(), { pos_i[0], pos_i[1], pos_i[2] }))
 						continue;
 
 					elements.push_back({ pos_i[0] - 1,  -1 });

@@ -148,7 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\objectLoader.h" />
-    <ClInclude Include="src\objFileLoader.hpp" />
+    <ClInclude Include="src\objFileLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="src\pbox.obj">
